@@ -9,6 +9,8 @@
 *     IBM Corporation - initial API and implementation
 *******************************************************************************/
 
+import * as fs from "fs";
+
 import { HttpGetStatusThread } from "./HttpGetStatusThread";
 import * as PathUtils from "./PathUtils";
 import { ProjectObject } from "./ProjectObject";
@@ -189,7 +191,20 @@ export class FileWatcher {
             return;
         }
 
-        const newEntry = new ChangedFileEntry(path, watchEntry.eventType, receivedAtInEpochMsecs, watchEntry.directory);
+        // read the file contents if not a directory
+        let content = null;
+
+        if (!watchEntry.directory) {
+            content = fs.readFileSync(fullLocalPath, "utf-8");
+        }
+
+        const newEntry = new ChangedFileEntry(
+            path,
+            watchEntry.eventType,
+            receivedAtInEpochMsecs,
+            watchEntry.directory,
+            content,
+        );
 
         const po = this._projectsMap.get(match.projectId);
         if (po) {

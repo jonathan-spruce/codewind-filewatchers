@@ -16,7 +16,7 @@ import * as PathUtils from "./PathUtils";
 import { ProjectObject } from "./ProjectObject";
 import { ProjectToWatch } from "./ProjectToWatch";
 
-import { WatchEventEntry } from "./WatchEventEntry";
+import { WatchEventEntry, EventType } from "./WatchEventEntry";
 
 import { ChangedFileEntry } from "./ChangedFileEntry";
 import { HttpPostOutputQueue } from "./HttpPostOutputQueue";
@@ -194,8 +194,12 @@ export class FileWatcher {
         // read the file contents if not a directory
         let content = null;
 
-        if (!watchEntry.directory) {
-            content = fs.readFileSync(fullLocalPath, "utf-8");
+        if (!watchEntry.directory && [EventType.CREATE, EventType.MODIFY].includes(watchEntry.eventType)) {
+            try {
+                content = fs.readFileSync(fullLocalPath, "utf-8");
+            } catch (error) {
+                log.error(`Unable to read file ${fullLocalPath}: ${error.message}`);
+            }
         }
 
         const newEntry = new ChangedFileEntry(
